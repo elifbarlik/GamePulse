@@ -19,3 +19,20 @@
 {% macro gp_incremental_strategy() -%}
   {{ 'merge' if target.type == 'bigquery' else 'delete+insert' }}
 {%- endmacro %}
+
+{# BigQuery loads naive Parquet timestamps as DATETIME; normalise to TIMESTAMP. #}
+{% macro gp_to_ts(col) -%}
+  {%- if target.type == 'bigquery' -%}cast({{ col }} as timestamp){%- else -%}{{ col }}{%- endif -%}
+{%- endmacro %}
+
+{# TIMESTAMP + n hours (dbt.dateadd would return DATETIME on BigQuery). #}
+{% macro gp_hour_after(col, n=1) -%}
+  {%- if target.type == 'bigquery' -%}timestamp_add({{ col }}, interval {{ n }} hour)
+  {%- else -%}({{ col }} + interval {{ n }} hour){%- endif -%}
+{%- endmacro %}
+
+{# DATE + n days (n may be a literal, negative, or a column). Keeps the DATE type on both engines. #}
+{% macro gp_date_add_days(col, n) -%}
+  {%- if target.type == 'bigquery' -%}date_add({{ col }}, interval {{ n }} day)
+  {%- else -%}({{ col }} + interval ({{ n }}) day){%- endif -%}
+{%- endmacro %}

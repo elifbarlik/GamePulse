@@ -22,7 +22,7 @@ select
     {{ gp_safe_divide('sum(p.fails)', 'sum(p.starts)') }} as fail_rate,
     {# churned: last level reached and inactive for 7+ days #}
     sum(case when ul.max_level = p.level_id
-              and ul.last_active <= {{ dbt.dateadd('day', -7, 'h.d') }} then 1 else 0 end) as churned_users
+              and ul.last_active <= {{ gp_date_add_days('h.d', -7) }} then 1 else 0 end) as churned_users
 from per_user_level p
 join user_last ul using (user_id)
 cross join horizon h

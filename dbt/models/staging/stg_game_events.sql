@@ -8,17 +8,20 @@
 
 {# Silver: parsed, valid, de-duplicated events. Incremental on ingested_at; upsert on event_id. #}
 with src as (
-    select *, {{ gp_parse_ts('event_timestamp') }} as event_ts
+    select event_id, event_name, user_id, session_id, event_timestamp, country, platform, app_version,
+           campaign_id, level_id, duration_seconds, purchase_amount, ad_revenue, batch_id,
+           {{ gp_to_ts('ingested_at') }} as ingested_at,
+           {{ gp_parse_ts('event_timestamp') }} as event_ts
     from {{ source('bronze', 'raw_game_events') }}
     {% if is_incremental() %}
-    where ingested_at > (select coalesce(max(ingested_at), cast('1970-01-01' as timestamp)) from {{ this }})
+    where {{ gp_to_ts('ingested_at') }} > (select coalesce(max(ingested_at), cast('1970-01-01' as timestamp)) from {{ this }})
     {% endif %}
 ),
 valid as (
     select * from src
     where event_ts is not null
       and user_id is not null
-      and event_ts <= {{ dbt.dateadd('hour', 1, 'ingested_at') }}
+      and event_ts <= {{ gp_hour_after('ingested_at') }}
       and not (event_name = 'purchase_completed' and purchase_amount is null)
 ),
 dedup as (
