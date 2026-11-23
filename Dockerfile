@@ -18,5 +18,5 @@ USER gamepulse
 ENV PORT=8000
 EXPOSE 8000
 
-# Cloud Run injects $PORT; locally defaults to 8000.
+# $PORT can override the listen port; defaults to 8000.
 CMD ["sh", "-c", "uvicorn ingestion.api.main:app --host 0.0.0.0 --port ${PORT}"]

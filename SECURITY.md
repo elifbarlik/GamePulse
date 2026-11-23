@@ -2,7 +2,7 @@
 
 | Risk | Control |
 |---|---|
-| Secrets in git | `.env` is git-ignored; only `.env.example` placeholders are committed; gitleaks pre-commit hook; no JSON keys anywhere — GCP access via ADC locally and Workload Identity Federation in CI |
+| Secrets in git | `.env` is git-ignored; only `.env.example` placeholders are committed; gitleaks pre-commit hook; no JSON keys anywhere — GCP access via Application Default Credentials (browser login), never a key file |
 | API abuse | API key compared with `hmac.compare_digest`; refuses to start with a key shorter than 16 chars; per-key rate limit; 1 MB body limit; 1000-event batch limit; OpenAPI/docs endpoints disabled |
 | Malicious payloads | Pydantic `extra="forbid"`, strict ID patterns (blocks injection-style IDs), numeric ranges, enum checks; invalid input is quarantined, never executed |
 | SQL injection | No user text is interpolated into SQL (BigQuery/DuckDB use parameters); the KPI assistant only runs static allowlisted templates on a read-only connection |
@@ -11,4 +11,4 @@
 | Supply chain | Dependabot (pip, Actions, Docker), `pip-audit` in CI (informational), bandit in CI |
 | PII | None — all identifiers are synthetic |
 
-Known limits: the rate limiter is in-memory (per instance); Cloud Run exposes the API publicly behind the API key — put API Gateway/Cloud Armor in front for real traffic; Airflow `standalone` in compose is for local demos only.
+Known limits: the rate limiter is in-memory (per instance); the API is meant for local/trusted-network use (if exposed publicly, put a gateway/WAF in front); Airflow `standalone` in compose is for local demos only.

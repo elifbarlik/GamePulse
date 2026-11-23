@@ -1,6 +1,8 @@
 # Deployment & cloud setup (free-tier oriented)
 
-Everything runs locally for free (`make demo`). The steps below add the cloud pieces. **Status:** §1 (BigQuery Sandbox) and §4 (local Docker stack) were executed and verified. §2 (Looker Studio) and §3 (Cloud Run) are written but not yet executed.
+Everything runs locally for free (`make demo`). The steps below add the cloud pieces. **Status:** §1 (BigQuery Sandbox) and §3 (local Docker stack) were executed and verified. §2 (Looker Studio) is a manual step in the browser.
+
+> Cloud Run was deliberately left out of scope (it needs a billing account). The Docker image runs anywhere a container runs, and `GP_STORE=bigquery` lets the API write Bronze to BigQuery; that path is unit-tested with a fake client but not run live.
 
 ## 1. BigQuery (Sandbox — no billing account)
 1. Create a GCP project, open BigQuery (Sandbox mode: 10 GB storage, 1 TB queries/month, tables expire after 60 days).
@@ -15,13 +17,7 @@ Everything runs locally for free (`make demo`). The steps below add the cloud pi
 ## 2. Looker Studio dashboards
 Create a data source per Gold table (`gold.mart_dau_wau_mau`, `mart_retention`, `mart_funnel`, `mart_level_dropoff`, `mart_session_metrics`, `mart_campaign_performance`). The four PNGs in `docs/img/` show the intended layout; each chart maps 1:1 to a mart column. Keep the report private or share view-only; it contains only simulated data.
 
-## 3. Cloud Run ingestion API (billing required; stays in the free tier at demo scale)
-* Workflow: `.github/workflows/deploy-cloud-run.yml` (manual). **Keyless** auth through Workload Identity Federation.
-* One-time setup: create a service account with only `roles/run.admin`, `roles/iam.serviceAccountUser`, `roles/cloudbuild.builds.editor`; create a runtime service account with `roles/bigquery.dataEditor` on the `bronze` dataset + `roles/bigquery.jobUser`; store the API key in Secret Manager (`gamepulse-api-key`).
-* Container: non-root, `min-instances=0` (scales to zero), `max-instances=2`, key from Secret Manager (never baked into the image).
-* Create a **$1 budget alert**, and delete the service after the demo (`gcloud run services delete gamepulse-ingestion`). The in-memory rate limiter is per instance — fine for a demo, use Cloud Armor/API Gateway for real traffic.
-
-## 4. Local stack
+## 3. Local stack
 ```
 cp .env.example .env     # set GAMEPULSE_API_KEY (>=16 chars) and GRAFANA_ADMIN_PASSWORD
 docker compose up -d --build            # api, redpanda, consumer, prometheus, grafana (127.0.0.1 only)

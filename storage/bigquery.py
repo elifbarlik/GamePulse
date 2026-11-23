@@ -1,6 +1,6 @@
 """BigQuery adapters (free-tier friendly: batch LOAD jobs only, no streaming inserts / DML).
 
-* BigQueryStore  - same ingest_batch interface as the DuckDB BronzeStore (used by Cloud Run API).
+* BigQueryStore  - same ingest_batch interface as the DuckDB BronzeStore (optional API backend).
 * export_duckdb_to_bigquery - one-shot loader of the local Bronze tables (WRITE_TRUNCATE => idempotent).
 
 NOTE: written against the public google-cloud-bigquery API and unit-tested with a fake client;

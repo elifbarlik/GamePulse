@@ -17,7 +17,7 @@ End-to-end data platform for a mobile game: validated event ingestion (API, batc
 | Data quality | Contract + 27 dbt tests + run-time gate (freshness, completeness, volume, tracking coverage); critical failure blocks Gold |
 | Monitoring | z-score-of-change anomaly detection, `pipeline_issue` vs `real_user_loss` verdict, Prometheus metrics, Grafana dashboard |
 | Orchestration | Airflow DAG (retries, backoff, DQ gate with `retries=0`, backfill-safe) sharing code with the local runner |
-| Engineering | 54 tests, ruff + bandit, non-root Docker, CI, Dependabot, keyless (WIF) Cloud Run deploy workflow |
+| Engineering | 54 tests, ruff + bandit, non-root Docker, CI, Dependabot |
 
 ## Results on the simulated dataset (50k players, 2.5M events)
 * Order-aware funnel: 49,997 → 49,135 → 35,097 → 30,029 → 1,270 purchasers.
@@ -49,7 +49,7 @@ python -m analytics.assistant.assistant "d7 retention by country"
 | Redpanda → consumer → Bronze (Docker) | ✅ run live: 20k events, lag → 0, replay-idempotent; consumer `_NO_OFFSET` crash found and fixed during this run |
 | Airflow DAG (Docker) | ✅ `ingest → dbt_silver → data_quality_gate → dbt_gold` all green (found and fixed a DuckDB single-writer lock conflict) |
 | Prometheus + Grafana (Docker) | ✅ both scrape targets UP, dashboard populated under load |
-| Cloud Run deploy workflow, Looker Studio report | ⚠️ written, **not executed** (Cloud Run needs a billing account; see `docs/deployment.md`) |
+| Looker Studio report on the BigQuery Gold tables | ⚠️ not yet built (setup in `docs/deployment.md`) |
 
 Evidence: [Airflow DAG](docs/img/airflow_dag_success.png) · [Prometheus targets](docs/img/prometheus_targets_up.png) · [Grafana observability](docs/img/grafana_pipeline_observability.png)
 
@@ -74,4 +74,4 @@ More: [architecture](docs/architecture.md) · [data dictionary](docs/data_dictio
 * Implemented schema-driven validation, reason-coded quarantine, idempotent batch processing and incremental upserts so retries and replays never double-count.
 * Wrote advanced SQL (cohort retention, order-aware funnels, rolling MAU, LAG sessionization, ROAS) with hand-computed golden-dataset tests; cut retention-query time from 140 ms to 2.4 ms via layered modelling.
 * Added a data-quality gate (freshness, completeness, tracking coverage, volume) that blocks Gold builds, plus change-based z-score anomaly detection that separates pipeline failures from real user loss.
-* Shipped with CI (ruff, bandit, 54 tests), non-root containers, Prometheus/Grafana observability and keyless Cloud Run deployment config.
+* Shipped with CI (ruff, bandit, 54 tests), non-root containers and Prometheus/Grafana observability.

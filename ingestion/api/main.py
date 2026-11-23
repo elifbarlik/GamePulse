@@ -1,4 +1,4 @@
-"""ASGI entrypoint. GP_STORE=duckdb (default, local) | bigquery (Cloud Run)."""
+"""ASGI entrypoint. GP_STORE=duckdb (default, local) | bigquery (load jobs only)."""
 
 from __future__ import annotations
 
