@@ -1,8 +1,0 @@
-README.md
-pyproject.toml
-gamepulse.egg-info/PKG-INFO
-gamepulse.egg-info/SOURCES.txt
-gamepulse.egg-info/dependency_links.txt
-gamepulse.egg-info/requires.txt
-gamepulse.egg-info/top_level.txt
-tests/test_smoke.py
