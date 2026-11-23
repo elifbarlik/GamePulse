@@ -1,0 +1,50 @@
+# Single source of truth for the GamePulse event contract.
+# Consumed by: ingestion/contracts.py (validation), dbt (accepted values), docs generator.
+version: 1
+common_required:
+  - event_id
+  - event_name
+  - user_id
+  - session_id
+  - event_timestamp
+  - country
+  - platform
+  - app_version
+common_optional:
+  - campaign_id
+enums:
+  country: [TR, DE, US, GB, FR, BR, IN, JP]
+  platform: [Android, iOS]
+events:
+  app_open:
+    description: Player opened the game.
+    required: []
+    optional: []
+  tutorial_started:
+    description: Tutorial began.
+    required: []
+    optional: []
+  tutorial_completed:
+    description: Tutorial finished.
+    required: [duration_seconds]
+    optional: []
+  level_started:
+    description: Player started a level.
+    required: [level_id]
+    optional: []
+  level_completed:
+    description: Level finished successfully.
+    required: [level_id, duration_seconds]
+    optional: []
+  level_failed:
+    description: Level failed.
+    required: [level_id, duration_seconds]
+    optional: []
+  purchase_completed:
+    description: In-app purchase completed (revenue in USD).
+    required: [purchase_amount]
+    optional: []
+  ad_watched:
+    description: Rewarded/interstitial ad watched (revenue in USD).
+    required: [ad_revenue]
+    optional: []
