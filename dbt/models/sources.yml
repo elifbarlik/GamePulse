@@ -1,0 +1,11 @@
+version: 2
+sources:
+  - name: bronze
+    schema: bronze
+    tables:
+      - name: raw_game_events
+        description: Immutable raw events that passed the ingestion contract (may contain duplicates / future timestamps).
+      - name: quarantine_events
+        description: Events rejected at ingestion with a reason code.
+      - name: raw_campaigns
+        description: Simulated campaign spend / installs.

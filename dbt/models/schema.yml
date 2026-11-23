@@ -1,0 +1,70 @@
+version: 2
+models:
+  - name: stg_game_events
+    description: "Silver. Valid, de-duplicated events (lineage: bronze.raw_game_events -> this)."
+    columns:
+      - name: event_id
+        tests: [unique, not_null]
+      - name: event_name
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [app_open, tutorial_started, tutorial_completed, level_started, level_completed, level_failed, purchase_completed, ad_watched]
+      - name: user_id
+        tests: [not_null]
+      - name: event_ts
+        tests: [not_null]
+      - name: country
+        tests:
+          - accepted_values:
+              arguments:
+                values: [TR, DE, US, GB, FR, BR, IN, JP]
+      - name: platform
+        tests:
+          - accepted_values:
+              arguments:
+                values: [Android, iOS]
+  - name: int_player_sessions
+    columns:
+      - name: session_id
+        tests: [unique, not_null]
+  - name: dim_users
+    columns:
+      - name: user_id
+        tests: [unique, not_null]
+      - name: cohort_date
+        tests: [not_null]
+  - name: dim_campaign
+    columns:
+      - name: campaign_id
+        tests: [unique, not_null]
+  - name: fct_player_activity
+    columns:
+      - name: user_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_users')
+                field: user_id
+  - name: fct_purchases
+    columns:
+      - name: purchase_amount
+        tests: [not_null]
+  - name: mart_dau_wau_mau
+    columns:
+      - name: activity_date
+        tests: [unique, not_null]
+  - name: mart_retention
+    columns:
+      - name: day_n
+        tests:
+          - accepted_values:
+              arguments:
+                values: [1, 7, 30]
+                quote: false
+  - name: mart_campaign_performance
+    columns:
+      - name: campaign_id
+        tests: [unique, not_null]

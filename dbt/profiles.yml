@@ -1,0 +1,15 @@
+# No secrets here: DuckDB path from env; BigQuery uses Application Default Credentials / WIF.
+gamepulse:
+  target: "{{ env_var('GP_DBT_TARGET', 'duckdb') }}"
+  outputs:
+    duckdb:
+      type: duckdb
+      path: "{{ env_var('GP_DUCKDB_PATH', '../data/gamepulse.duckdb') }}"
+      threads: 4
+    bigquery:
+      type: bigquery
+      method: oauth
+      project: "{{ env_var('GCP_PROJECT_ID', 'unset') }}"
+      dataset: silver
+      location: "{{ env_var('BQ_LOCATION', 'US') }}"
+      threads: 4
