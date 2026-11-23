@@ -23,3 +23,12 @@ logs/
 .idea/
 .vscode/
 *.egg-info/
+
+# extra safety
+.venv*/
+.env.*
+!.env.example
+*.pem
+*.p12
+gcloud*.json
+application_default_credentials.json
