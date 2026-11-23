@@ -20,7 +20,7 @@ Measured from the `dbt build` log and the console on the same 2.49 M-event datas
 | Read `silver.stg_game_events` to build one mart (typical) | 97–197 MiB |
 | `SELECT day_n, retention … FROM gold.mart_retention` (what a dashboard runs) | **89.67 KB** |
 
-A dashboard query on Gold reads ≈ **2,000× less** than a mart build from Silver — the Gold layer is what keeps BI cost flat. I did not benchmark the same question against the raw Bronze table, nor Silver with vs. without partitioning, so no claim is made about partition/cluster savings; `stg_game_events` is configured with
+A dashboard query on Gold reads roughly **1,000–2,000× less** than a mart build from Silver (97–197 MiB vs 89.67 KB) — the Gold layer is what keeps BI cost flat. I did not benchmark the same question against the raw Bronze table, nor Silver with vs. without partitioning, so no claim is made about partition/cluster savings; `stg_game_events` is configured with
 ```
 partition_by = event_date (DATE)      cluster_by = [user_id, event_name]
 ```
