@@ -49,7 +49,6 @@ python -m analytics.assistant.assistant "d7 retention by country"
 | Redpanda → consumer → Bronze (Docker) | ✅ run live: 20k events, lag → 0, replay-idempotent; consumer `_NO_OFFSET` crash found and fixed during this run |
 | Airflow DAG (Docker) | ✅ `ingest → dbt_silver → data_quality_gate → dbt_gold` all green (found and fixed a DuckDB single-writer lock conflict) |
 | Prometheus + Grafana (Docker) | ✅ both scrape targets UP, dashboard populated under load |
-| Looker Studio report on the BigQuery Gold tables | ⚠️ not yet built (setup in `docs/deployment.md`) |
 
 Evidence: [Airflow DAG](docs/img/airflow_dag_success.png) · [Prometheus targets](docs/img/prometheus_targets_up.png) · [Grafana observability](docs/img/grafana_pipeline_observability.png)
 

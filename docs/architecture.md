@@ -40,7 +40,7 @@ flowchart LR
   RAW --> REJ
   STG --> DQ -->|pass| DIM --> FCT --> MART
   DQ -.->|critical fail: Gold build skipped| ALERT[Webhook alert]
-  MART --> REPORT[Dashboards PNG / Looker Studio]
+  MART --> REPORT[Dashboards PNG]
   MART --> ASSIST[KPI assistant<br/>allowlisted SQL only]
   API --> PROM[(Prometheus)] --> GRAF[Grafana]
   STREAM --> PROM

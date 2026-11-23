@@ -1,7 +1,7 @@
 """Render the 4 analytics dashboards as PNGs from the Gold marts (offline, no BI licence needed).
 
 Usage: python -m dashboard.render_report [--db data/gamepulse.duckdb] [--out docs/img]
-Looker Studio equivalents point at the same gold.* tables (see docs/looker_studio.md).
+Any BI tool can read the same gold.* tables.
 """
 
 from __future__ import annotations
