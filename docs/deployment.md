@@ -1,11 +1,12 @@
 # Deployment & cloud setup (free-tier oriented)
 
-Everything runs locally for free (`make demo`). The steps below add the cloud pieces. **Status: written but not executed against a live GCP project in this repository** — verify each step on your own project.
+Everything runs locally for free (`make demo`). The steps below add the cloud pieces. **Status:** §1 (BigQuery Sandbox) and §4 (local Docker stack) were executed and verified. §2 (Looker Studio) and §3 (Cloud Run) are written but not yet executed.
 
 ## 1. BigQuery (Sandbox — no billing account)
 1. Create a GCP project, open BigQuery (Sandbox mode: 10 GB storage, 1 TB queries/month, tables expire after 60 days).
-2. `gcloud auth application-default login` (no key files).
-3. `export GCP_PROJECT_ID=<id>` and `pip install -e ".[bigquery]"`.
+2. `gcloud auth application-default login` (no key files). If you see a missing-credentials-file error, an unrelated `GOOGLE_APPLICATION_CREDENTIALS` variable is set in your shell: `Remove-Item Env:GOOGLE_APPLICATION_CREDENTIALS` for the session.
+   Use the real project **ID** (from `gcloud projects list`), not the display name.
+3. `export GCP_PROJECT_ID=<id>`. Use a **separate venv** for dbt-bigquery (`py -m venv .venv-bq && .venv-bq\Scripts\pip install dbt-bigquery`) so it does not disturb the dbt-duckdb environment.
 4. Load Bronze: `make bq-load` (batch load jobs → free).
 5. Build Silver/Gold: `GP_DBT_TARGET=bigquery GP_BQ_SANDBOX=1 dbt build --project-dir dbt --profiles-dir dbt`.
    `GP_BQ_SANDBOX=1` makes Silver a plain table (CREATE OR REPLACE) instead of incremental `MERGE`, because DML may be restricted in the Sandbox. With billing enabled leave it unset to use the incremental `merge` strategy.

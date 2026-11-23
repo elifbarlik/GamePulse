@@ -11,17 +11,20 @@ Same question — **D1 retention per cohort** — answered at three layers (`pyt
 
 ≈ **58× faster** than raw, with ~650× fewer rows. Gold is computed once per run, so every dashboard query is cheap.
 
-## BigQuery (configured, not benchmarked here)
-`stg_game_events` is created with
+## BigQuery (live project, Sandbox)
+Measured from the `dbt build` log and the console on the same 2.49 M-event dataset:
+
+| Step | Bytes processed |
+|---|---|
+| Build `silver.stg_game_events` from Bronze (one-off, per run) | 367.4 MiB |
+| Read `silver.stg_game_events` to build one mart (typical) | 97–197 MiB |
+| `SELECT day_n, retention … FROM gold.mart_retention` (what a dashboard runs) | **89.67 KB** |
+
+A dashboard query on Gold reads ≈ **2,000× less** than a mart build from Silver — the Gold layer is what keeps BI cost flat. I did not benchmark the same question against the raw Bronze table, nor Silver with vs. without partitioning, so no claim is made about partition/cluster savings; `stg_game_events` is configured with
 ```
 partition_by = event_date (DATE)      cluster_by = [user_id, event_name]
 ```
-(see `dbt/models/staging/stg_game_events.sql`). Expected effect: date-range filters prune partitions (billed bytes ∝ days scanned) and `WHERE event_name = …` / per-user joins read fewer blocks thanks to clustering. To measure on your project:
-```sql
--- dry run shows bytes processed without cost
-bq query --dry_run --use_legacy_sql=false 'SELECT COUNT(*) FROM silver.stg_game_events WHERE event_date BETWEEN "2026-10-01" AND "2026-10-07" AND event_name="app_open"'
-```
-Compare against the same table created without partition/cluster and record both numbers here.
+(see `dbt/models/staging/stg_game_events.sql`). In Sandbox mode (`GP_BQ_SANDBOX=1`) Silver is a plain table, and partition/cluster options apply at creation. To measure the effect yourself: `bq query --dry_run --use_legacy_sql=false '<query>'` against a partitioned and an unpartitioned copy.
 
 ## Modelling choices that reduce work
 * `fct_player_activity` (user × day) is the single base for DAU/WAU/MAU, retention and revenue — marts never re-scan raw events.

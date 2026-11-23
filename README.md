@@ -12,7 +12,7 @@ End-to-end data platform for a mobile game: validated event ingestion (API, batc
 | Data contracts | Event dictionary (YAML) → Pydantic validation, per-event required fields, reason-coded quarantine |
 | Ingestion | FastAPI (API key with constant-time compare, rate limit, body/batch limits), batch loader, Redpanda producer/consumer |
 | Idempotency | Batch ledger committed with the data; `event_id` dedup; incremental upsert; Kafka offset-range batch ids |
-| Modelling | dbt: staging → intermediate (LAG sessionization) → star-schema marts; DuckDB **and** BigQuery targets |
+| Modelling | dbt: staging → intermediate (LAG sessionization) → star-schema marts; DuckDB **and** BigQuery targets (both verified) |
 | Analytics SQL | CTEs, window functions, rolling distinct counts, cohort retention D1/D7/D30, funnel with event ordering |
 | Data quality | Contract + 27 dbt tests + run-time gate (freshness, completeness, volume, tracking coverage); critical failure blocks Gold |
 | Monitoring | z-score-of-change anomaly detection, `pipeline_issue` vs `real_user_loss` verdict, Prometheus metrics, Grafana dashboard |
@@ -45,10 +45,16 @@ python -m analytics.assistant.assistant "d7 retention by country"
 | Simulator, contract, Bronze, API, batch loader | ✅ built and tested; API smoke-tested over real HTTP |
 | dbt Silver/Gold on DuckDB, DQ gate, anomaly detection, dashboards | ✅ run end-to-end on the full 2.5M-event dataset |
 | Golden-fixture dbt test (hand-computed D1/D7/funnel/ROAS) and incremental test | ✅ |
-| Kafka consumer/producer | ✅ processing logic unit-tested incl. replay idempotency and batch-vs-stream equivalence · ⚠️ not yet run against a live Redpanda container |
-| Airflow DAG | ✅ structure tested · ⚠️ not run in an Airflow instance |
-| BigQuery adapter + dbt BigQuery target, Cloud Run workflow, Looker Studio | ⚠️ implemented and unit-tested with a fake client; **not executed against a live GCP project** (see `docs/deployment.md`) |
-| Docker image / compose / Grafana | ⚠️ files validated (`docker compose config`); containers not started in this environment |
+| **BigQuery** (Sandbox): Bronze load + `dbt build` (17 models, 27 tests) | ✅ **44/44 pass on a live project**; row counts match DuckDB and D1/D7/D30 retention is identical (0.517 / 0.264 / 0.037) |
+| Redpanda → consumer → Bronze (Docker) | ✅ run live: 20k events, lag → 0, replay-idempotent; consumer `_NO_OFFSET` crash found and fixed during this run |
+| Airflow DAG (Docker) | ✅ `ingest → dbt_silver → data_quality_gate → dbt_gold` all green (found and fixed a DuckDB single-writer lock conflict) |
+| Prometheus + Grafana (Docker) | ✅ both scrape targets UP, dashboard populated under load |
+| Cloud Run deploy workflow, Looker Studio report | ⚠️ written, **not executed** (Cloud Run needs a billing account; see `docs/deployment.md`) |
+
+Evidence: [Airflow DAG](docs/img/airflow_dag_success.png) · [Prometheus targets](docs/img/prometheus_targets_up.png) · [Grafana observability](docs/img/grafana_pipeline_observability.png)
+
+![Grafana pipeline observability](docs/img/grafana_pipeline_observability.png)
+![Airflow DAG](docs/img/airflow_dag_success.png)
 
 ## Repository layout
 ```
