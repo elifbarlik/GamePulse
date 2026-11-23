@@ -52,7 +52,7 @@ def process_messages(store: BronzeStore, messages: list[Message]) -> dict:
 
 
 def run(db_path: str, batch_size: int = 500, poll_s: float = 1.0, metrics_port: int = 8001) -> None:
-    from confluent_kafka import Consumer  # imported lazily so tests don't need a broker
+    from confluent_kafka import Consumer, TopicPartition  # lazy: tests don't need a broker
 
     start_http_server(metrics_port, addr=os.environ.get("GP_METRICS_ADDR", "127.0.0.1"))
     store = BronzeStore(db_path)
@@ -74,11 +74,13 @@ def run(db_path: str, batch_size: int = 500, poll_s: float = 1.0, metrics_port: 
                 batch.setdefault(m.partition(), []).append(Message(m.topic(), m.partition(), m.offset(), m.value()))
             for part, items in batch.items():
                 process_messages(store, items)
-                _, high = consumer.get_watermark_offsets(
-                    __import__("confluent_kafka").TopicPartition(TOPIC, part), timeout=2)
-                LAG.labels(str(part)).set(max(0, high - (items[-1].offset + 1)))
-            if msgs:
-                consumer.commit(asynchronous=False)
+                next_offset = items[-1].offset + 1
+                tp = TopicPartition(TOPIC, part, next_offset)
+                # Commit exactly what was stored (after the Bronze write => at-least-once).
+                # A bare commit() raises _NO_OFFSET when a poll returned only error events.
+                consumer.commit(offsets=[tp], asynchronous=False)
+                _, high = consumer.get_watermark_offsets(TopicPartition(TOPIC, part), timeout=2)
+                LAG.labels(str(part)).set(max(0, high - next_offset))
     finally:
         consumer.close()
         store.close()

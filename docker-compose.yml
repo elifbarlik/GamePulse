@@ -34,6 +34,7 @@ services:
       GP_STREAM_DUCKDB_PATH: /app/data/gamepulse_stream.duckdb
       GP_METRICS_ADDR: 0.0.0.0
     depends_on: [redpanda]
+    restart: unless-stopped
     volumes: ["./data:/app/data"]
     security_opt: ["no-new-privileges:true"]
 
