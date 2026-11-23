@@ -19,7 +19,7 @@ services:
     build: .
     environment:
       GAMEPULSE_API_KEY: ${GAMEPULSE_API_KEY:?set GAMEPULSE_API_KEY in .env}
-      GP_DUCKDB_PATH: /app/data/gamepulse.duckdb
+      GP_DUCKDB_PATH: /app/data/gamepulse_api.duckdb  # separate file: DuckDB allows a single writer process
     ports: ["127.0.0.1:8000:8000"]
     volumes: ["./data:/app/data"]
     read_only: true
