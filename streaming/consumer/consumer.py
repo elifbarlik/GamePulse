@@ -54,7 +54,7 @@ def process_messages(store: BronzeStore, messages: list[Message]) -> dict:
 def run(db_path: str, batch_size: int = 500, poll_s: float = 1.0, metrics_port: int = 8001) -> None:
     from confluent_kafka import Consumer  # imported lazily so tests don't need a broker
 
-    start_http_server(metrics_port, addr="127.0.0.1")
+    start_http_server(metrics_port, addr=os.environ.get("GP_METRICS_ADDR", "127.0.0.1"))
     store = BronzeStore(db_path)
     consumer = Consumer({
         "bootstrap.servers": os.environ.get("GP_KAFKA_BOOTSTRAP", "127.0.0.1:19092"),

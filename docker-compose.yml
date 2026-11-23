@@ -1,0 +1,68 @@
+# All published ports are bound to 127.0.0.1. Secrets come from .env (see .env.example) - no defaults.
+# Start core stack:  docker compose up -d --build
+# Airflow (optional): docker compose --profile airflow up -d
+services:
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:v24.2.7
+    command:
+      - redpanda
+      - start
+      - --smp=1
+      - --memory=512M
+      - --overprovisioned
+      - --node-id=0
+      - --kafka-addr=internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr=internal://redpanda:9092,external://127.0.0.1:19092
+    ports: ["127.0.0.1:19092:19092"]
+
+  api:
+    build: .
+    environment:
+      GAMEPULSE_API_KEY: ${GAMEPULSE_API_KEY:?set GAMEPULSE_API_KEY in .env}
+      GP_DUCKDB_PATH: /app/data/gamepulse.duckdb
+    ports: ["127.0.0.1:8000:8000"]
+    volumes: ["./data:/app/data"]
+    read_only: true
+    tmpfs: ["/tmp"]
+    security_opt: ["no-new-privileges:true"]
+
+  consumer:
+    build: .
+    command: ["python", "-m", "streaming.consumer.consumer"]
+    environment:
+      GP_KAFKA_BOOTSTRAP: redpanda:9092
+      GP_STREAM_DUCKDB_PATH: /app/data/gamepulse_stream.duckdb
+      GP_METRICS_ADDR: 0.0.0.0
+    depends_on: [redpanda]
+    volumes: ["./data:/app/data"]
+    security_opt: ["no-new-privileges:true"]
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    volumes: ["./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro"]
+    ports: ["127.0.0.1:9090:9090"]
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?set GRAFANA_ADMIN_PASSWORD in .env}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports: ["127.0.0.1:3000:3000"]
+    depends_on: [prometheus]
+
+  airflow:
+    profiles: ["airflow"]
+    image: apache/airflow:2.10.2-python3.11
+    command: standalone  # dev only: SQLite + generated admin password (printed in container logs)
+    environment:
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/gamepulse/orchestration/dags
+      _PIP_ADDITIONAL_REQUIREMENTS: >-
+        dbt-duckdb pydantic pyyaml numpy pandas pyarrow duckdb prometheus-client
+      GP_DUCKDB_PATH: /opt/gamepulse/data/gamepulse.duckdb
+    volumes: [".:/opt/gamepulse"]
+    ports: ["127.0.0.1:8080:8080"]

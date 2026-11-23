@@ -29,5 +29,5 @@ def process_batch(store: BronzeStore, batch_id: str, source: str, raw_events: li
             quarantined.append((json.dumps(raw, default=str)[:4000], reason))
             reasons[reason] = reasons.get(reason, 0) + 1
     result = store.ingest_batch(batch_id, source, valid, quarantined)
-    result["quarantine_reasons"] = reasons
+    result["quarantine_reasons"] = {} if result["status"] == "duplicate_batch" else reasons
     return result

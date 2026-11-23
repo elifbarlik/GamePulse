@@ -1,5 +1,5 @@
 {{ config(
-    materialized='incremental',
+    materialized=('table' if env_var('GP_BQ_SANDBOX', '0') == '1' else 'incremental'),
     unique_key='event_id',
     incremental_strategy=gp_incremental_strategy(),
     partition_by=({'field': 'event_date', 'data_type': 'date'} if target.type == 'bigquery' else none),

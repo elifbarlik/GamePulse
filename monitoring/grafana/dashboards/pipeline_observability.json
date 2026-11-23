@@ -1,0 +1,48 @@
+{
+  "title": "GamePulse - Pipeline Observability",
+  "uid": "gamepulse-obs",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10s",
+  "time": { "from": "now-30m", "to": "now" },
+  "panels": [
+    {
+      "id": 1, "type": "timeseries", "title": "Ingestion throughput (events/s, API + consumer)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "sum(rate(gp_ingest_events_total{outcome=\"accepted\"}[1m]))", "legendFormat": "api accepted" },
+        { "expr": "sum(rate(gp_consumer_events_total{outcome=\"accepted\"}[1m]))", "legendFormat": "consumer accepted" }
+      ]
+    },
+    {
+      "id": 2, "type": "timeseries", "title": "Failed / quarantined records (events/s)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "sum(rate(gp_ingest_events_total{outcome=\"quarantined\"}[1m]))", "legendFormat": "api quarantined" },
+        { "expr": "sum(rate(gp_consumer_events_total{outcome=~\"quarantined|kafka_error\"}[1m]))", "legendFormat": "consumer failed" }
+      ]
+    },
+    {
+      "id": 3, "type": "timeseries", "title": "Consumer lag (messages)",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "expr": "sum by (partition) (gp_consumer_lag)", "legendFormat": "partition {{partition}}" } ]
+    },
+    {
+      "id": 4, "type": "timeseries", "title": "Micro-batch duration p95 (s)",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "expr": "histogram_quantile(0.95, sum(rate(gp_consumer_batch_seconds_bucket[5m])) by (le))", "legendFormat": "p95" } ]
+    },
+    {
+      "id": 5, "type": "stat", "title": "Freshness: seconds since last stored batch",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "expr": "time() - gp_consumer_last_success_timestamp" } ],
+      "fieldConfig": { "defaults": { "unit": "s", "thresholds": { "mode": "absolute", "steps": [
+        { "color": "green", "value": null }, { "color": "orange", "value": 60 }, { "color": "red", "value": 300 } ] } } }
+    }
+  ]
+}

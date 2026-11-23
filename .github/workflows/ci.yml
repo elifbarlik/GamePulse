@@ -14,7 +14,18 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
-      - run: pip install -e ".[dev]"
+      - run: pip install -e ".[dev,streaming]" google-cloud-bigquery
       - run: ruff check .
-      - run: bandit -q -r ingestion streaming analytics
-      - run: pytest --cov=ingestion --cov-report=term-missing
+      - run: bandit -q -r ingestion streaming analytics orchestration storage
+      - name: Dependency audit (informational)
+        run: pip-audit --progress-spinner off || true
+      - name: Tests (unit + dbt golden/incremental on DuckDB)
+        run: pytest --cov=ingestion --cov=analytics --cov=streaming --cov-report=term-missing
+  docker:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t gamepulse-api:ci .
+      - name: Container runs as non-root
+        run: test "$(docker run --rm --entrypoint id gamepulse-api:ci -u)" != "0"

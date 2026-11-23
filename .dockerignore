@@ -1,0 +1,9 @@
+.venv
+.git
+.env
+data
+dbt/target
+dbt/logs
+**/__pycache__
+docs/img
+tests

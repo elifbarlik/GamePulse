@@ -47,7 +47,9 @@ def _version_for_day(day: int) -> str:
 
 def _build_users(cfg: SimConfig, rng: np.random.Generator) -> pd.DataFrame:
     n = cfg.n_users
-    install_day = np.minimum(rng.gamma(2.0, 9.0, n).astype(int), INSTALL_DAYS - 1)
+    install_day = rng.gamma(2.0, 9.0, n).astype(int)
+    late = install_day >= INSTALL_DAYS  # resample instead of clipping (clipping creates a fake spike)
+    install_day[late] = rng.integers(0, INSTALL_DAYS, late.sum())
     country = rng.choice(COUNTRIES, n, p=COUNTRY_P)
     platform = rng.choice(["Android", "iOS"], n, p=[0.68, 0.32])
     camp_idx = rng.integers(1, CAMPAIGNS_PER_COUNTRY + 1, n)
