@@ -1,0 +1,24 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.env
+*.env
+!.env.example
+# secrets / credentials
+*.json.key
+*service-account*.json
+gcp-key*.json
+# data & build artefacts
+data/
+*.parquet
+*.duckdb
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+logs/
+.idea/
+.vscode/
