@@ -9,7 +9,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import subprocess
+import subprocess  # nosec B404 - fixed argv only
 import sys
 import urllib.request
 from pathlib import Path
@@ -30,7 +30,7 @@ RAW = Path(os.environ.get("GP_RAW_DIR", ROOT / "data" / "raw"))
 def _dbt(*args: str) -> None:
     cmd = [sys.executable, "-m", "dbt.cli.main", *args, "--project-dir", str(ROOT / "dbt"),
            "--profiles-dir", str(ROOT / "dbt")]
-    subprocess.run(cmd, check=True, env={**os.environ, "GP_DUCKDB_PATH": DB})
+    subprocess.run(cmd, check=True, env={**os.environ, "GP_DUCKDB_PATH": DB})  # noqa: S603 # nosec B603
 
 
 def ingest() -> dict:
@@ -70,7 +70,7 @@ def notify(results: list[CheckResult]) -> None:
             raise ValueError("ALERT_WEBHOOK_URL must be https")
         req = urllib.request.Request(url, data=json.dumps({"content": text[:1900]}).encode(),  # noqa: S310
                                      headers={"Content-Type": "application/json"})
-        urllib.request.urlopen(req, timeout=10)  # noqa: S310
+        urllib.request.urlopen(req, timeout=10)  # noqa: S310 # nosec B310 - https enforced above
 
 
 def run_all_steps() -> int:

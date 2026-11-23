@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import math
+from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
@@ -17,7 +18,7 @@ from ingestion.store import BronzeStore
 def clean_value(v):
     if v is None or v is pd.NA or (isinstance(v, float) and math.isnan(v)):
         return None
-    if isinstance(v, pd.Timestamp):
+    if isinstance(v, datetime):  # pd.Timestamp is a datetime subclass
         return v.isoformat()
     if hasattr(v, "item"):
         return v.item()

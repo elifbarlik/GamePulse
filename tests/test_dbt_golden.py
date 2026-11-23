@@ -70,7 +70,7 @@ def gold(tmp_path_factory):
     store.load_campaigns(pd.DataFrame([{"campaign_id": "c1", "country": "TR", "spend": 10.0, "installs": 2}]))
     store.close()
     env = {**os.environ, "GP_DUCKDB_PATH": str(db), "GP_DBT_TARGET": "duckdb"}
-    res = subprocess.run(
+    res = subprocess.run(  # noqa: S603
         [sys.executable, "-m", "dbt.cli.main", "build", "--project-dir", str(ROOT / "dbt"),
          "--profiles-dir", str(ROOT / "dbt"), "--target-path", str(db.parent / "target"),
          "--log-path", str(db.parent / "logs")],

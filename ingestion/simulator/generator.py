@@ -95,8 +95,8 @@ def generate_events(cfg: SimConfig) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
                 common = (u.user_id, sid, u.country, u.platform, version, u.campaign_id)
 
                 def emit(name, dt, **kw):
-                    ts = t + timedelta(seconds=dt)
-                    add(name, common[0], common[1], ts, *common[2:], **kw)
+                    ts = t + timedelta(seconds=dt)  # noqa: B023 (called within the same iteration)
+                    add(name, common[0], common[1], ts, *common[2:], **kw)  # noqa: B023
 
                 emit("app_open", 0)
                 cur = 3
@@ -168,7 +168,7 @@ def inject_defects(ev: pd.DataFrame, cfg: SimConfig, rng: np.random.Generator) -
     k = max(1, int(n * cfg.defect_rate / 5))
     ev = ev.copy()
     idx = rng.choice(n, size=4 * k, replace=False)
-    fut, nul, noamt_pool, unk = idx[:k], idx[k:2 * k], idx[2 * k:3 * k], idx[3 * k:]
+    fut, nul, unk = idx[:k], idx[k:2 * k], idx[3 * k:]
     ev.loc[fut, "event_timestamp"] = ev.loc[fut, "event_timestamp"] + pd.Timedelta(days=400)
     ev.loc[nul, "user_id"] = None
     purchases = ev.index[ev["event_name"] == "purchase_completed"]
