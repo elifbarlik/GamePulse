@@ -14,7 +14,7 @@ from ingestion.processing import process_batch
 from ingestion.store import BronzeStore
 
 
-def _clean(v):
+def clean_value(v):
     if v is None or v is pd.NA or (isinstance(v, float) and math.isnan(v)):
         return None
     if isinstance(v, pd.Timestamp):
@@ -37,7 +37,7 @@ def load_events(store: BronzeStore, path: Path, chunk_rows: int = 200_000) -> di
     totals = {"accepted": 0, "quarantined": 0, "skipped_batches": 0, "batches": 0}
     pf = pq.ParquetFile(path)
     for i, rb in enumerate(pf.iter_batches(batch_size=chunk_rows)):
-        records = [{k: _clean(v) for k, v in r.items()} for r in rb.to_pylist()]
+        records = [{k: clean_value(v) for k, v in r.items()} for r in rb.to_pylist()]
         res = process_batch(store, f"f_{digest}_{i:05d}", path.name, records)
         totals["batches"] += 1
         if res["status"] == "duplicate_batch":
